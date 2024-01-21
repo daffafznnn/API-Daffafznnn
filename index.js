@@ -25,7 +25,7 @@ try {
 // })();
 
 app.use(cors({
-  origin: 'https://daffafznnn-new-portofolio.verc el.app',
+  origin: 'https://daffafznnn-new-portofolio.vercel.app',
   credentials: true,
 }));
 
