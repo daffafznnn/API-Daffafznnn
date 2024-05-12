@@ -3,15 +3,14 @@ import {
   getQuestion,
   getQuestionById,
   createQuestion,
-  answerQuestion,
 } from "../controllers/QuestionController.js";
-import { adminOnly, verifyUser } from "../middleware/AuthUser.js";
+import { verifyUser } from "../middleware/AuthUser.js";
 
 const router = express.Router();
 
-router.get("/question", getQuestion);
-router.get("/question/:uuid", getQuestionById);
-router.post("/question/create", createQuestion);
-router.patch("/question/answer/:uuid", verifyUser, adminOnly, answerQuestion);
+router.get("/api/v1/question", getQuestion);
+router.get("/api/v1/question/:uuid", getQuestionById);
+router.post("/api/v1/question/send", createQuestion);
+// router.patch("/question/answer/:uuid", verifyUser, answerQuestion);
 
 export default router;

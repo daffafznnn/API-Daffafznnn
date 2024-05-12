@@ -19,27 +19,28 @@ const Question = db.define(
       allowNull: false,
       validate: {
         isEmail: true,
-        notEmpty: true,
       },
     },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
     },
     question: {
       type: DataTypes.TEXT,
       allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
     },
-    answer: {
-      type: DataTypes.TEXT,
+    status: {
+      type: DataTypes.ENUM("waiting", "missed", "denied", "read"),
       allowNull: false,
-      defaultValue: "waiting for reply"
+      defaultValue: "waiting",
+    },
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+    time: {
+      type: DataTypes.TIME,
+      allowNull: false,
     },
   },
   {

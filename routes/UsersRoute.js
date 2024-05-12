@@ -2,17 +2,17 @@ import express from "express";
 import {
   getUsers,
   getUsersById,
-  createAdminUsers,
+  createUsers,
   updateUsers,
   deleteUsers,
 } from "../controllers/UsersController.js";
-import { adminOnly, verifyUser } from "../middleware/AuthUser.js";
+import { verifyUser } from "../middleware/AuthUser.js";
 
 const router = express.Router();
-router.get("/users", verifyUser, adminOnly, getUsers);
-router.get("/users/:uuid", verifyUser, adminOnly, getUsersById);
-router.post("/users/addAdmin", verifyUser, adminOnly, createAdminUsers);
-router.patch("/users/update/:uuid",  verifyUser, updateUsers);
-router.delete("/users/delete/:uuid",  verifyUser, deleteUsers);
+router.get("/api/v1/users", getUsers);
+router.get("/api/v1/users/:id", getUsersById);
+router.post("/api/v1/users/add", verifyUser, createUsers);
+router.put("/api/v1/users/update/:id",  verifyUser, updateUsers);
+router.delete("/api/v1/users/delete/:id",  verifyUser, deleteUsers);
 
 export default router;
