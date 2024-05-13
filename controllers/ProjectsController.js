@@ -73,7 +73,7 @@ export const addProjects = async (req, res) => {
 
     // Menyiapkan data untuk diunggah ke S3
     const params = {
-      Bucket: "projects", // Nama bucket
+      Bucket: "mystorage", // Nama bucket
       Key: `${Date.now()}-${inputFile.name}`, // Nama file unik
       Body: inputFile.data, // Konten file
       ACL: "public-read", // Izin akses file
@@ -143,7 +143,7 @@ export const updateProjects = async (req, res) => {
       if (oldImageKey) {
         await s3
           .deleteObject({
-            Bucket: "projects",
+            Bucket: "mystorage",
             Key: oldImageKey,
           })
           .promise();
@@ -151,7 +151,7 @@ export const updateProjects = async (req, res) => {
 
       // Menyiapkan data untuk diunggah ke S3
       const params = {
-        Bucket: "projects", // Nama bucket
+        Bucket: "mystorage", // Nama bucket
         Key: `${Date.now()}-${req.file.originalname}`, // Nama file unik
         Body: fs.createReadStream(req.file.path), // Konten file
         ACL: "public-read", // Izin akses file
@@ -212,7 +212,7 @@ export const deleteProjects = async (req, res) => {
     if (imageKey) {
       await s3
         .deleteObject({
-          Bucket: "projects",
+          Bucket: "mystorage",
           Key: imageKey,
         })
         .promise();
