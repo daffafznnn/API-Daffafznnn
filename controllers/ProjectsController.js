@@ -42,7 +42,7 @@ export const getProjectsByUuid = async (req, res) => {
 const s3 = new AWS.S3({
   accessKeyId: process.env.CELLAR_ADDON_KEY_ID,
   secretAccessKey: process.env.CELLAR_ADDON_KEY_SECRET,
-  endpoint: process.env.CELLAR_ADDON_HOS,
+  endpoint: process.env.CELLAR_ADDON_HOST,
 });
 
 export const addProjects = async (req, res) => {
