@@ -302,6 +302,7 @@ export const answerQuestion = async (req, res) => {
     // Update status pertanyaan menjadi "missed"
     await question.update({
       status: "missed",
+      answer: answer
     });
 
     // Kirim email dengan jawaban
