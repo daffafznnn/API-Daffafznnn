@@ -7,11 +7,11 @@ export const getAllProjects = async (req, res) => {
   try {
     const project = await Project.findAll();
     res.status(200).json({
-      msg: "Berhasil mengambil semua data proyek",
+      msg: "Successfully retrieve all project data",
       data: project,
     });
   } catch (error) {
-    res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    res.status(500).json({ msg: "Server error occurred" });
     console.log(error);
   }
 };
@@ -25,15 +25,15 @@ export const getProjectsByUuid = async (req, res) => {
     });
 
     if (!project) {
-      res.status(404).json({ msg: "Proyek tidak ditemukan" });
+      res.status(404).json({ msg: "Project not found" });
     }
 
     res.status(200).json({
-      msg: `Berhasil mengambil data proyek ${project.title}`,
+      msg: `Successfully retrieved project data ${project.title}`,
       data: project,
     });
   } catch (error) {
-    res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    res.status(500).json({ msg: "Server error occurred" });
     console.log(error);
   }
 };
@@ -55,7 +55,7 @@ export const addProjects = async (req, res) => {
     if (!title || !inputFile) {
       return res
         .status(400)
-        .json({ msg: "Judul dan file gambar harus disertakan" });
+        .json({ msg: "Title and image file must be included" });
     }
 
     // Validasi ukuran dan tipe file gambar
@@ -63,11 +63,13 @@ export const addProjects = async (req, res) => {
       // 1MB
       return res
         .status(400)
-        .json({ msg: "Ukuran file terlalu besar. Maksimal 1MB" });
+        .json({ msg: "File size is too large. 1MB maximum" });
     }
-    if (!["image/jpeg", "image/png"].includes(inputFile.mimetype)) {
+    if (
+      !["image/jpeg", "image/png", "image/jpg"].includes(inputFile.mimetype)
+    ) {
       return res.status(400).json({
-        msg: "Format file tidak didukung. Gunakan format JPG atau PNG",
+        msg: "The file format is not supported. Use JPG or PNG format",
       });
     }
 
@@ -95,12 +97,12 @@ export const addProjects = async (req, res) => {
     });
 
     res.status(201).json({
-      msg: "Proyek berhasil ditambahkan",
+      msg: "Project added successfully",
       data: project,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    res.status(500).json({ msg: "Server error occurred" });
   }
 };
 
@@ -118,23 +120,25 @@ export const updateProjects = async (req, res) => {
     });
 
     if (!project) {
-      return res.status(404).json({ msg: "Proyek tidak ditemukan" });
+      return res.status(404).json({ msg: "Project not found" });
     }
 
-    // Jika ada file yang diunggah
-    if (req.file) {
+    // Jika ada file yang diunggah dengan key 'InputFile'
+    if (req.files && req.files.InputFile) {
+      const file = req.files.InputFile;
+
       // Validasi ukuran dan tipe file gambar
-      if (req.file.size > 1 * 1024 * 1024) {
+      if (file.size > 1 * 1024 * 1024) {
         // 1MB
         return res
           .status(400)
-          .json({ msg: "Ukuran file terlalu besar. Maksimal 1MB" });
+          .json({ msg: "File size is too large. 1MB maximum" });
       }
-      if (!["image/jpeg", "image/png"].includes(req.file.mimetype)) {
+      if (!["image/jpeg", "image/png"].includes(file.mimetype)) {
         return res
           .status(400)
           .json({
-            msg: "Format file tidak didukung. Gunakan format JPG atau PNG",
+            msg: "The file format is not supported. Use JPG or PNG format",
           });
       }
 
@@ -152,19 +156,19 @@ export const updateProjects = async (req, res) => {
       // Menyiapkan data untuk diunggah ke S3
       const params = {
         Bucket: "mystorage", // Nama bucket
-        Key: `${Date.now()}-${req.file.originalname}`, // Nama file unik
-        Body: fs.createReadStream(req.file.path), // Konten file
+        Key: `${Date.now()}-${file.originalname}`, // Nama file unik
+        Body: fs.createReadStream(file.path), // Konten file
         ACL: "public-read", // Izin akses file
-        ContentType: req.file.mimetype, // Tipe konten file
+        ContentType: file.mimetype, // Tipe konten file
       };
 
       // Melakukan pengunggahan file ke S3
       const data = await s3.upload(params).promise();
 
       // Hapus file yang diunggah dari server lokal
-      fs.unlinkSync(req.file.path);
+      fs.unlinkSync(file.path);
 
-      // Update proyek dengan data baru
+      // Update proyek dengan data baru termasuk gambar
       await project.update({
         title,
         description,
@@ -185,10 +189,10 @@ export const updateProjects = async (req, res) => {
       });
     }
 
-    res.status(200).json({ msg: "Proyek berhasil diperbarui" });
+    res.status(200).json({ msg: "Project updated successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    res.status(500).json({ msg: "Server error occurred" });
   }
 };
 
@@ -204,7 +208,7 @@ export const deleteProjects = async (req, res) => {
     });
 
     if (!project) {
-      return res.status(404).json({ msg: "Proyek tidak ditemukan" });
+      return res.status(404).json({ msg: "Project not found" });
     }
 
     // Hapus file gambar di S3 jika ada
@@ -221,9 +225,9 @@ export const deleteProjects = async (req, res) => {
     // Hapus proyek dari database
     await project.destroy();
 
-    res.status(200).json({ msg: "Proyek berhasil dihapus" });
+    res.status(200).json({ msg: "Project successfully deleted" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    res.status(500).json({ msg: "Server error occurred" });
   }
 };

@@ -5,12 +5,12 @@ export const getQuestion = async (req, res) => {
   try {
     const response = await Question.findAll();
     res.status(200).json({
-      msg: "Berhasil mengambil semua data pertanyaan",
-      data: response
+      msg: "Successfully retrieve all question data",
+      data: response,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Gagal mengambil data pertanyaan" });
+    res.status(500).json({ error: "Server error occurred" });
   }
 };
 
@@ -23,15 +23,15 @@ export const getQuestionById = async (req, res) => {
     });
     if (question) {
       res.status(200).json({
-        msg: `Berhasil mengambil data pertanyaan dari ${question.email}`,
+        msg: `Successfully retrieved question data from ${question.email}`,
         data: question,
       });
     } else {
-      res.status(404).json({ error: "Pertanyaan tidak ditemukan" });
+      res.status(404).json({ error: "Question not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Gagal mengambil data pertanyaan" });
+    res.status(500).json({ error: "Server error occurred" });
   }
 };
 
@@ -40,7 +40,7 @@ export const createQuestion = async (req, res) => {
 
   // Validasi bahwa semua properti tidak boleh kosong
   if (!email || !name || !question) {
-    return res.status(400).json({ msg: "Semua kolom harus diisi!" });
+    return res.status(400).json({ msg: "All fields are required!" });
   }
 
   try {
@@ -64,24 +64,22 @@ export const createQuestion = async (req, res) => {
     // izinkan mereka membuat pertanyaan
     if (
       !lastQuestion ||
-      currentTime - lastQuestion.createdAt > 60 * 60 * 1000
+      currentTime - lastQuestion.createdAt > 30 * 60 * 1000
     ) {
       // 1 jam
       await Question.create({ email, name, question, date, time });
       res.status(201).json({
-        msg: "Pertanyaan berhasil dikirim, tunggu balasan melalui email Anda.",
+        msg: "Enquiry successfully submitted, expect a reply via your email.",
       });
     } else {
       // Jika belum berlalu waktu yang ditentukan, tolak permintaan pengguna
-      return res
-        .status(429)
-        .json({
-          msg: "Anda telah membuat pertanyaan dalam satu jam terakhir. Silakan coba lagi nanti.",
-        });
+      return res.status(429).json({
+        msg: "You have made a question in the last 30 minutes. Please try again later.",
+      });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Gagal membuat pertanyaan baru" });
+    res.status(500).json({ error: "Failed to create a new question" });
   }
 };
 
@@ -277,7 +275,7 @@ export const answerQuestion = async (req, res) => {
 
     // Pastikan answer tidak kosong
     if (!answer || answer.trim() === "") {
-      return res.status(400).json({ msg: "Jawaban tidak boleh kosong" });
+      return res.status(400).json({ msg: "Answers cannot be blank" });
     }
 
     // Cari pertanyaan berdasarkan UUID
@@ -289,14 +287,14 @@ export const answerQuestion = async (req, res) => {
 
     // Jika pertanyaan tidak ditemukan, kirim respons 404
     if (!question) {
-      return res.status(404).json({ msg: "Pertanyaan tidak ditemukan" });
+      return res.status(404).json({ msg: "Question not found" });
     }
 
     // Jika status pertanyaan adalah "missed", kirim respons 403
     if (question.status === "missed") {
       return res
         .status(403)
-        .json({ msg: "Pertanyaan sudah tidak dapat dijawab lagi" });
+        .json({ msg: "The question can no longer be answered" });
     }
 
     // Update status pertanyaan menjadi "missed"
@@ -310,12 +308,12 @@ export const answerQuestion = async (req, res) => {
 
     // Kirim respons berhasil
     return res.status(200).json({
-      msg: `Berhasil menjawab pertanyaan dari ${question.email}`,
+      msg: `Successfully answered a question from ${question.email}`,
     });
   } catch (error) {
     // Tangani kesalahan dan kirim respons 500
     console.error(error);
-    return res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    return res.status(500).json({ msg: "Server error occurred" });
   }
 };
 
@@ -325,7 +323,7 @@ export const changeStatusQuestion = async (req, res) => {
 
     // Pastikan status tidak kosong
     if (!status || status.trim() === "") {
-      return res.status(400).json({ msg: "Status tidak boleh kosong" });
+      return res.status(400).json({ msg: "Status cannot be empty" });
     }
 
     // Definisikan kondisi status yang valid
@@ -335,27 +333,39 @@ export const changeStatusQuestion = async (req, res) => {
     if (!validStatus.includes(status)) {
       return res
         .status(400)
-        .json({ msg: "Status harus berupa 'read' atau 'denied'" });
+        .json({ msg: "Status must be either 'read' or 'denied'" });
     }
 
     // Lakukan proses pembaruan status pada pertanyaan
     // Misalnya, dapat menggunakan kode berikut:
-    const question = await Question.findOne({ where: { uuid: req.params.uuid } });
+    const question = await Question.findOne({
+      where: { uuid: req.params.uuid },
+    });
     if (!question) {
-      return res.status(404).json({ msg: "Pertanyaan tidak ditemukan" });
+      return res.status(404).json({ msg: "Question not found" });
     }
+
+    // Cek apakah status pertanyaan saat ini adalah 'missed'
+    if (question.status === "missed") {
+      return res.status(403).json({
+        msg: "Cannot change the status of a question that has been answered",
+      });
+    }
+
+    // Update status jika tidak 'missed'
     await question.update({ status });
 
     // Kirim respons berhasil
     return res
       .status(200)
-      .json({ msg: "Status pertanyaan berhasil diperbarui" });
+      .json({ msg: "Question status updated successfully" });
   } catch (error) {
     // Tangani kesalahan dan kirim respons 500
     console.error(error);
-    return res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    return res.status(500).json({ msg: "Server error occurred" });
   }
 };
+
 
 export const deleteQuestion = async (req, res) => {
   try {
@@ -367,7 +377,7 @@ export const deleteQuestion = async (req, res) => {
     });
 
     if (!question) {
-      res.status(404).json({ msg: "Pertanyaan tidak ditemukan" }); 
+      res.status(404).json({ msg: "Question not found" }); 
       }
 
     await Question.destroy({
@@ -377,11 +387,11 @@ export const deleteQuestion = async (req, res) => {
     });
 
     res.status(200).json({
-      msg: `Pertanyaan dari ${question.email} telah di hapus`
+      msg: `Questions from ${question.email} have been deleted`,
     });
 
   } catch (error) {
-    res.status(500).json({ msg: "Terjadi kesalahan dari server" });
+    res.status(500).json({ msg: "Server error occurred" });
     console.log(error)
   }
 };

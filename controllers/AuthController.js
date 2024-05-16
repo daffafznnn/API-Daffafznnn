@@ -36,13 +36,13 @@ export const Login = async (req, res) => {
     });
 
     // Jika pengguna tidak ditemukan, kirim respons 404
-    if (!user) return res.status(404).json({ msg: "User tidak ditemukan" });
+    if (!user) return res.status(404).json({ msg: "User not found" });
 
     // Memeriksa apakah password yang dimasukkan cocok dengan password pengguna
     const match = await bcryptjs.compare(req.body.password, user.password);
 
     // Jika password tidak cocok, kirim respons 400
-    if (!match) return res.status(400).json({ msg: "Password salah" });
+    if (!match) return res.status(400).json({ msg: "Password wrong" });
 
     // Jika otentikasi berhasil, buat token akses dan refresh token
     const { accessToken, refreshToken } = generateTokens(user);
@@ -56,8 +56,8 @@ export const Login = async (req, res) => {
     user.refreshToken = undefined;
 
     // Mengirim respons dengan token akses dan refresh token
-    res.json({
-      msg: "Login berhasil",
+    res.status(200).json({
+      msg: "Login successful",
       data: user,
       accessToken,
       refreshToken,
@@ -65,7 +65,7 @@ export const Login = async (req, res) => {
   } catch (error) {
     // Menangani kesalahan server dan mengirim respons 500
     console.error(error);
-    res.status(500).json({ msg: "Terjadi kesalahan server" });
+    res.status(500).json({ msg: "Server error occurred" });
   }
 };
 
@@ -81,7 +81,7 @@ export const Me = async (req, res) => {
     // Periksa apakah token masih valid
     const currentTime = new Date().getTime();
     if (decodedToken.exp * 1000 < currentTime) {
-      return res.status(403).json({ msg: "Token Kaduluarsa" });
+      return res.status(403).json({ msg: "Token expired" });
     }
 
     // Dapatkan informasi pengguna berdasarkan id pengguna dari token
@@ -94,13 +94,13 @@ export const Me = async (req, res) => {
 
     // Mengirim respons dengan data pengguna
     res.status(200).json({
-      msg: "Berhasil mendapatkan data akun Anda",
+      msg: "Successfully get your account data",
       data: user,
     });
   } catch (error) {
     // Menangani kesalahan server dan mengirim respons 500
     console.error(error);
-    res.status(500).json({ msg: "Terjadi kesalahan server" });
+    res.status(500).json({ msg: "Server error occurred" });
   }
 };
 
@@ -111,10 +111,10 @@ export const Logout = async (req, res) => {
     const user = await User.findByPk(req.userId);
     user.refreshToken = null;
     await user.save();
-    res.json({ msg: "Logout berhasil" });
+    res.json({ msg: "Logout successful" });
   } catch (error) {
     // Menangani kesalahan server dan mengirim respons 500
     console.error(error);
-    res.status(500).json({ msg: "Terjadi kesalahan server" });
+    res.status(500).json({ msg: "Server error occurred" });
   }
 };
