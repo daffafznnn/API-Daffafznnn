@@ -29,10 +29,7 @@ const Question = db.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    answer: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
+    answer: DataTypes.TEXT,
     status: {
       type: DataTypes.ENUM("waiting", "missed", "denied", "read"),
       allowNull: false,
