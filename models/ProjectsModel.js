@@ -34,13 +34,31 @@ const Project = db.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    status: {
+      type: DataTypes.ENUM("Pending", "Scheduled", "Active", "Completed"),
+      allowNull: false,
+      defaultValue: "Pending",
+    },
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
     image: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
     },
     url: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: false,
+    },
+    progress: {
+      type: DataTypes.INTEGER, // Alternatively, you could use FLOAT if you need decimal precision
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        min: 0,
+        max: 100,
+      },
     },
   },
   {

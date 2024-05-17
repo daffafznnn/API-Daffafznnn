@@ -47,18 +47,25 @@ const s3 = new AWS.S3({
 
 export const addProjects = async (req, res) => {
   try {
-    const { title, description, technologiesUsed, githubUrl, websiteUrl } =
-      req.body;
+    const {
+      title,
+      description,
+      technologiesUsed,
+      githubUrl,
+      websiteUrl,
+      progress,
+      status,
+    } = req.body;
     const inputFile = req.files && req.files.inputFile;
 
-    // Pastikan semua properti yang diperlukan ada
+    // Ensure all required properties are present
     if (!title || !inputFile) {
       return res
         .status(400)
         .json({ msg: "Title and image file must be included" });
     }
 
-    // Validasi ukuran dan tipe file gambar
+    // Validate image file size and type
     if (inputFile.size > 1 * 1024 * 1024) {
       // 1MB
       return res
@@ -68,32 +75,37 @@ export const addProjects = async (req, res) => {
     if (
       !["image/jpeg", "image/png", "image/jpg"].includes(inputFile.mimetype)
     ) {
-      return res.status(400).json({
-        msg: "The file format is not supported. Use JPG or PNG format",
-      });
+      return res
+        .status(400)
+        .json({
+          msg: "The file format is not supported. Use JPG or PNG format",
+        });
     }
 
-    // Menyiapkan data untuk diunggah ke S3
+    // Prepare data for upload to S3
     const params = {
-      Bucket: "mystorage", // Nama bucket
-      Key: `${Date.now()}-${inputFile.name}`, // Nama file unik
-      Body: inputFile.data, // Konten file
-      ACL: "public-read", // Izin akses file
-      ContentType: inputFile.mimetype, // Tipe konten file
+      Bucket: "mystorage", // Bucket name
+      Key: `${Date.now()}-${inputFile.name}`, // Unique file name
+      Body: inputFile.data, // File content
+      ACL: "public-read", // File access permission
+      ContentType: inputFile.mimetype, // File content type
     };
 
-    // Melakukan pengunggahan file ke S3
+    // Upload file to S3
     const data = await s3.upload(params).promise();
 
-    // Menyimpan data proyek ke basis data
+    // Save project data to the database
     const project = await Project.create({
       title,
       description,
       technologiesUsed,
       githubUrl,
       websiteUrl,
-      image: data.Key, // Nama file di S3
-      url: data.Location, // URL file di S3
+      progress: progress || 0, // Default progress to 0 if not provided
+      status: status || "Pending", // Default status to "Pending" if not provided
+      date: new Date(), // Automatically set the current date
+      image: data.Key, // File name in S3
+      url: data.Location, // URL of the file in S3
     });
 
     res.status(201).json({
@@ -108,26 +120,31 @@ export const addProjects = async (req, res) => {
 
 export const updateProjects = async (req, res) => {
   try {
-    const { title, description, technologiesUsed, githubUrl, websiteUrl } =
-      req.body;
+    const {
+      title,
+      description,
+      technologiesUsed,
+      githubUrl,
+      websiteUrl,
+      progress,
+      status,
+    } = req.body;
     const { uuid } = req.params;
 
-    // Periksa apakah proyek dengan UUID tertentu ada dalam database
+    // Check if the project with the given UUID exists in the database
     const project = await Project.findOne({
-      where: {
-        uuid,
-      },
+      where: { uuid },
     });
 
     if (!project) {
       return res.status(404).json({ msg: "Project not found" });
     }
 
-    // Jika ada file yang diunggah dengan key 'InputFile'
+    // If a file is uploaded with key 'InputFile'
     if (req.files && req.files.InputFile) {
       const file = req.files.InputFile;
 
-      // Validasi ukuran dan tipe file gambar
+      // Validate image file size and type
       if (file.size > 1 * 1024 * 1024) {
         // 1MB
         return res
@@ -142,7 +159,7 @@ export const updateProjects = async (req, res) => {
           });
       }
 
-      // Menghapus file gambar yang lama di S3
+      // Delete the old image file from S3
       const oldImageKey = project.image;
       if (oldImageKey) {
         await s3
@@ -153,39 +170,40 @@ export const updateProjects = async (req, res) => {
           .promise();
       }
 
-      // Menyiapkan data untuk diunggah ke S3
+      // Prepare data for upload to S3
       const params = {
-        Bucket: "mystorage", // Nama bucket
-        Key: `${Date.now()}-${file.originalname}`, // Nama file unik
-        Body: fs.createReadStream(file.path), // Konten file
-        ACL: "public-read", // Izin akses file
-        ContentType: file.mimetype, // Tipe konten file
+        Bucket: "mystorage", // Bucket name
+        Key: `${Date.now()}-${file.originalname}`, // Unique file name
+        Body: file.data, // File content
+        ACL: "public-read", // File access permission
+        ContentType: file.mimetype, // File content type
       };
 
-      // Melakukan pengunggahan file ke S3
+      // Upload file to S3
       const data = await s3.upload(params).promise();
 
-      // Hapus file yang diunggah dari server lokal
-      fs.unlinkSync(file.path);
-
-      // Update proyek dengan data baru termasuk gambar
+      // Update project with new data including image
       await project.update({
         title,
         description,
         technologiesUsed,
         githubUrl,
         websiteUrl,
-        image: data.Key, // Nama file di S3
-        url: data.Location, // URL file di S3
+        progress: progress !== undefined ? progress : project.progress, // Update if provided
+        status: status || project.status, // Update if provided
+        image: data.Key, // File name in S3
+        url: data.Location, // URL of the file in S3
       });
     } else {
-      // Jika tidak ada file yang diunggah, hanya update data proyek
+      // If no file is uploaded, only update project data
       await project.update({
         title,
         description,
         technologiesUsed,
         githubUrl,
         websiteUrl,
+        progress: progress !== undefined ? progress : project.progress, // Update if provided
+        status: status || project.status, // Update if provided
       });
     }
 
