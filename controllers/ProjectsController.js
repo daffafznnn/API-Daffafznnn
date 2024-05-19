@@ -84,7 +84,7 @@ export const addProjects = async (req, res) => {
 
     // Prepare data for upload to S3
     const params = {
-      Bucket: "mystorage", // Bucket name
+      Bucket: "abcdefvck", // Bucket name
       Key: `${Date.now()}-${inputFile.name}`, // Unique file name
       Body: inputFile.data, // File content
       ACL: "public-read", // File access permission
@@ -164,7 +164,7 @@ export const updateProjects = async (req, res) => {
       if (oldImageKey) {
         await s3
           .deleteObject({
-            Bucket: "mystorage",
+            Bucket: "abcdefvck",
             Key: oldImageKey,
           })
           .promise();
@@ -172,7 +172,7 @@ export const updateProjects = async (req, res) => {
 
       // Prepare data for upload to S3
       const params = {
-        Bucket: "mystorage", // Bucket name
+        Bucket: "abcdefvck", // Bucket name
         Key: `${Date.now()}-${file.originalname}`, // Unique file name
         Body: file.data, // File content
         ACL: "public-read", // File access permission
@@ -234,7 +234,7 @@ export const deleteProjects = async (req, res) => {
     if (imageKey) {
       await s3
         .deleteObject({
-          Bucket: "mystorage",
+          Bucket: "abcdefvck",
           Key: imageKey,
         })
         .promise();
