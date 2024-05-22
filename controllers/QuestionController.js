@@ -98,7 +98,7 @@ const sendEmailforAnswer = async (question, answer) => {
       to: question.email,
       subject: `Hai! ${question.name} Jawaban atas Pertanyaan Anda🎈`,
       html: `
-       <!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -257,15 +257,20 @@ const sendEmailforAnswer = async (question, answer) => {
         `,
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error("Error sending email:", error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
+    return new Promise((resolve, reject) => {
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending email:", error);
+          reject(error);
+        } else {
+          console.log("Email sent: " + info.response);
+          resolve(info);
+        }
+      });
     });
   } catch (error) {
-    console.error(error);
+    console.error("Unexpected error:", error);
+    throw error;
   }
 };
 
@@ -297,14 +302,20 @@ export const answerQuestion = async (req, res) => {
         .json({ msg: "The question can no longer be answered" });
     }
 
+    // Kirim email dengan jawaban
+    try {
+      await sendEmailforAnswer(question, answer);
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ msg: "Failed to send email. Answer not recorded." });
+    }
+
     // Update status pertanyaan menjadi "missed"
     await question.update({
       status: "missed",
-      answer: answer
+      answer: answer,
     });
-
-    // Kirim email dengan jawaban
-    await sendEmailforAnswer(question, answer);
 
     // Kirim respons berhasil
     return res.status(200).json({
@@ -316,7 +327,7 @@ export const answerQuestion = async (req, res) => {
     return res.status(500).json({ msg: "Server error occurred" });
   }
 };
-
+  
 export const changeStatusQuestion = async (req, res) => {
   try {
     const { status } = req.body;

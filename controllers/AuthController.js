@@ -103,18 +103,3 @@ export const Me = async (req, res) => {
     res.status(500).json({ msg: "Server error occurred" });
   }
 };
-
-// Controller untuk logout pengguna
-export const Logout = async (req, res) => {
-  try {
-    // Menghapus refresh token dari pengguna yang sedang login
-    const user = await User.findByPk(req.userId);
-    user.refreshToken = null;
-    await user.save();
-    res.json({ msg: "Logout successful" });
-  } catch (error) {
-    // Menangani kesalahan server dan mengirim respons 500
-    console.error(error);
-    res.status(500).json({ msg: "Server error occurred" });
-  }
-};
