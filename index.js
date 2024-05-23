@@ -6,6 +6,7 @@ import UsersRoute from "./routes/UsersRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
 import QuestionRoute from "./routes/QuestionRoute.js";
 import ProjectsRoute from "./routes/ProjectsRoute.js";
+import SettingsUserRoute from "./routes/SettingsUserRoute.js";
 import fileUpload from "express-fileupload";
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use(UsersRoute);
 app.use(AuthRoute);
 app.use(QuestionRoute);
 app.use(ProjectsRoute);
+app.use(SettingsUserRoute);
 
 const PORT = process.env.APP_PORT || 5000;
 

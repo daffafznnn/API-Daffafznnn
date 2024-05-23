@@ -27,7 +27,12 @@ const User = db.define(
     refreshToken: {
       type: DataTypes.TEXT,
     },
-
+    verifyCode: {
+      type: DataTypes.STRING,
+    },
+    verifyCodeExpire: {
+      type: DataTypes.TIME,
+    },
   },
   {
     freezeTableName: true,

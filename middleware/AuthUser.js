@@ -29,6 +29,7 @@ export const verifyUser = async (req, res, next) => {
 
       // Menetapkan id pengguna ke dalam objek req untuk digunakan oleh handler rute selanjutnya
       req.userId = user.id;
+      req.email = user.email
 
       // Melanjutkan ke handler rute selanjutnya
       next();
