@@ -85,12 +85,12 @@ export const forgotPassword = async (req, res) => {
     return res.status(200).json({ msg: "Verification code sent to email." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Server error occurred" });
+    res.status(500).json({ msg: "Server error occurred", error });
   }
 };
 
 export const verifyCodeForgotPass = async (req, res) => {
-  const { email, code, newPassword, confPassword } = req.body;
+  const { email, code, newPassword, confNewPassword } = req.body;
 
   try {
     const user = await User.findOne({
@@ -116,7 +116,7 @@ export const verifyCodeForgotPass = async (req, res) => {
       return res.status(400).json({ msg: "Verification code expired" });
     }
 
-    if (newPassword !== confPassword) {
+    if (newPassword !== confNewPassword) {
       return res
         .status(400)
         .json({ msg: "Password and confirmation password do not match" });
@@ -138,6 +138,33 @@ export const verifyCodeForgotPass = async (req, res) => {
   }
 };
 
+export const resendCode = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({
+      where: {
+        email,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        msg: "User not found",
+      });
+    }
+
+    try {
+      await sendVerificationCode(user);
+    } catch (error) {
+      return res.status(500).json({ msg: "Failed to resend email." });
+    }
+
+    return res.status(200).json({ msg: "Verification code resent to email." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error occurred" });
+  }
+};
 
 export const changePassword = async (req, res) => {
   const { oldPassword, newPassword, confNewPassword } = req.body;

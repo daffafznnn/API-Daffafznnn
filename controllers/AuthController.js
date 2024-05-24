@@ -42,7 +42,7 @@ export const Login = async (req, res) => {
     const match = await bcryptjs.compare(req.body.password, user.password);
 
     // Jika password tidak cocok, kirim respons 400
-    if (!match) return res.status(400).json({ msg: "Password wrong" });
+    if (!match) return res.status(400).json({ msg: "Wrong password " });
 
     // Jika otentikasi berhasil, buat token akses dan refresh token
     const { accessToken, refreshToken } = generateTokens(user);
