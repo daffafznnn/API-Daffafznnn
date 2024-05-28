@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import db from "../config/Database.js";
+import Categories_Project from "./Categories_projectsModel.js";
 
 const { DataTypes } = Sequelize;
 
@@ -60,10 +61,20 @@ const Project = db.define(
         max: 100,
       },
     },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      validate: {
+        notEmpty: true,
+      },
+    },
   },
   {
     freezeTableName: true,
   }
 );
+
+Categories_Project.hasMany(Project);
+Project.belongsTo(Categories_Project, { foreignKey: "categoryId" });
 
 export default Project;

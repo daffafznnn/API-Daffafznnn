@@ -1,14 +1,32 @@
+import Categories_Project from "../models/Categories_projectsModel.js";
 import Project from "../models/ProjectsModel.js";
 import AWS from "aws-sdk";
-import fs from "fs";
-// import path from "path";
 
 export const getAllProjects = async (req, res) => {
   try {
-    const project = await Project.findAll();
+    const projects = await Project.findAll({
+      include: [
+        {
+          model: Categories_Project,
+          as: "category", // Pastikan alias sesuai dengan yang didefinisikan dalam model
+          attributes: [["name", "category"]], // Menggunakan alias untuk 'name' sebagai 'category'
+        },
+      ],
+      order: [["createdAt", "DESC"]], // Ubah 'createdAt' dengan kolom yang relevan jika berbeda
+    });
+
+    // Transformasi data untuk menyederhanakan struktur JSON
+    const transformedProjects = projects.map((project) => {
+      const projectData = project.get({ plain: true });
+      return {
+        ...projectData,
+        category: projectData.category ? projectData.category.category : null,
+      };
+    });
+
     res.status(200).json({
-      msg: "Successfully retrieve all project data",
-      data: project,
+      msg: "Successfully get all project data with categories",
+      data: transformedProjects,
     });
   } catch (error) {
     res.status(500).json({ msg: "Server error occurred" });
@@ -55,14 +73,16 @@ export const addProjects = async (req, res) => {
       websiteUrl,
       progress,
       status,
+      categoryId
     } = req.body;
+
     const inputFile = req.files && req.files.inputFile;
 
     // Ensure all required properties are present
-    if (!title || !inputFile) {
+    if (!title || !inputFile || !categoryId) {
       return res
         .status(400)
-        .json({ msg: "Title and image file must be included" });
+        .json({ msg: "Title, image file, and categoryId must be included" });
     }
 
     // Validate image file size and type
@@ -75,11 +95,9 @@ export const addProjects = async (req, res) => {
     if (
       !["image/jpeg", "image/png", "image/jpg"].includes(inputFile.mimetype)
     ) {
-      return res
-        .status(400)
-        .json({
-          msg: "The file format is not supported. Use JPG or PNG format",
-        });
+      return res.status(400).json({
+        msg: "The file format is not supported. Use JPG or PNG format",
+      });
     }
 
     // Prepare data for upload to S3
@@ -106,6 +124,7 @@ export const addProjects = async (req, res) => {
       date: new Date(), // Automatically set the current date
       image: data.Key, // File name in S3
       url: data.Location, // URL of the file in S3
+      categoryId, // Include categoryId in the creation
     });
 
     res.status(201).json({
@@ -128,6 +147,7 @@ export const updateProjects = async (req, res) => {
       websiteUrl,
       progress,
       status,
+      categoryId,
     } = req.body;
     const { uuid } = req.params;
 
@@ -152,11 +172,9 @@ export const updateProjects = async (req, res) => {
           .json({ msg: "File size is too large. 1MB maximum" });
       }
       if (!["image/jpeg", "image/png"].includes(file.mimetype)) {
-        return res
-          .status(400)
-          .json({
-            msg: "The file format is not supported. Use JPG or PNG format",
-          });
+        return res.status(400).json({
+          msg: "The file format is not supported. Use JPG or PNG format",
+        });
       }
 
       // Delete the old image file from S3
@@ -189,10 +207,10 @@ export const updateProjects = async (req, res) => {
         technologiesUsed,
         githubUrl,
         websiteUrl,
-        progress: progress !== undefined ? progress : project.progress, // Update if provided
-        status: status || project.status, // Update if provided
+        progress: progress !== undefined ? progress : project.progress, // Update if provided        status: status || project.status, // Update if provided
         image: data.Key, // File name in S3
         url: data.Location, // URL of the file in S3
+        categoryId, // Include categoryId in the update
       });
     } else {
       // If no file is uploaded, only update project data
@@ -204,6 +222,7 @@ export const updateProjects = async (req, res) => {
         websiteUrl,
         progress: progress !== undefined ? progress : project.progress, // Update if provided
         status: status || project.status, // Update if provided
+        categoryId, // Include categoryId in the update
       });
     }
 
