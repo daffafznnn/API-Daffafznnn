@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import helmet from "helmet";
+import fileUpload from "express-fileupload";
 import db from "./config/Database.js";
 import UsersRoute from "./routes/UsersRoute.js";
 import AuthRoute from "./routes/AuthRoute.js";
@@ -22,12 +23,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
+app.use(fileUpload());
 app.use(UsersRoute);
 app.use(AuthRoute);
 app.use(QuestionRoute);
-app.use(ProjectsRoute);
 app.use(SettingsUserRoute);
 app.use(CategoriesProjectsRoute);
+app.use(ProjectsRoute);
 
 const PORT = process.env.APP_PORT || 8080;
 

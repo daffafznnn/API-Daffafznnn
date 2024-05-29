@@ -79,10 +79,10 @@ export const addProjects = async (req, res) => {
     const inputFile = req.files && req.files.inputFile;
 
     // Ensure all required properties are present
-    if (!title || !inputFile || !categoryId) {
+    if (!title || !inputFile) {
       return res
         .status(400)
-        .json({ msg: "Title, image file, and categoryId must be included" });
+        .json({ msg: "Title and file, must be included" });
     }
 
     // Validate image file size and type
